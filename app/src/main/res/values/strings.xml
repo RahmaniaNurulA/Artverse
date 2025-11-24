@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">Artverse</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="search">Search</string>
+    <string name="ai_assistant">AI Assistant</string>
+    <string name="search_placeholder">Search artworks...</string>
+    <string name="no_image">No Image</string>
+    <string name="loading">Loading...</string>
+    <string name="send">Send</string>
+    <string name="close">Close</string>
+    <string name="ai_greeting">Hello! I\'m your AI art assistant. Ask me anything about the artworks in the gallery!</string>
+    <string name="ai_prompt_placeholder">Ask about artworks...</string>
+    <string name="artist">Artist</string>
+    <string name="date">Date</string>
+    <string name="medium">Medium</string>
+    <string name="department">Department</string>
+    <string name="culture">Culture</string>
+    <string name="untitled">Untitled</string>
+    <string name="unknown_artist">Unknown Artist</string>
+    <string name="unknown">Unknown</string>
+    <string name="ai_error">Sorry, I couldn\'t process your request. Please make sure you\'ve added your Groq API key.</string>
+    <string name="connection_error">Error: Unable to connect to AI service</string>
 </resources>

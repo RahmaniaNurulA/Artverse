@@ -36,6 +36,10 @@ import org.json.JSONObject
 import java.net.URL
 import java.net.HttpURLConnection
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import android.content.res.Configuration
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
 
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -172,6 +176,8 @@ fun DashboardScreen(
     isLoading: Boolean,
     onArtClick: (ArtObject) -> Unit
 ) {
+    val isLandscape = isLandscape()
+
     if (isLoading) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -181,7 +187,7 @@ fun DashboardScreen(
         }
     } else {
         LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
+            columns = StaggeredGridCells.Fixed(if (isLandscape) 3 else 2), // 3 kolom untuk landscape
             contentPadding = PaddingValues(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalItemSpacing = 8.dp
@@ -256,6 +262,8 @@ fun SearchScreen(
     artObjects: List<ArtObject>,
     onArtClick: (ArtObject) -> Unit
 ) {
+    val isLandscape = isLandscape()
+
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
             value = searchQuery,
@@ -275,7 +283,7 @@ fun SearchScreen(
         }
 
         LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
+            columns = StaggeredGridCells.Fixed(if (isLandscape) 3 else 2),
             contentPadding = PaddingValues(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalItemSpacing = 8.dp
@@ -294,6 +302,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
     var chatMessages by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val isLandscape = isLandscape()
 
     Column(
         modifier = Modifier
@@ -317,14 +326,15 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
             item {
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFE3F2FD)
+                        containerColor = Color(0xFF4CAF50)
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = "Hello! I'm your AI art assistant. Ask me anything about the artworks in the gallery!",
                         modifier = Modifier.padding(16.dp),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = Color.White
                     )
                 }
             }
@@ -357,7 +367,13 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
                 onValueChange = { userMessage = it },
                 modifier = Modifier.weight(1f),
                 placeholder = { Text("Ask about artworks...") },
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(24.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White
+                )
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -387,25 +403,28 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
 }
 
 @Composable
-fun ChatBubble(sender: String, message: String) {
+fun ChatBubble(sender: String, message: String, isLandscape: Boolean = false) {
     val isUser = sender == "user"
 
     Box(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
+        contentAlignment = if ((isUser)) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = if (isUser) MaterialTheme.colorScheme.primary else Color.White
+                containerColor = if (sender == "user")
+                    Color(0xFF2196F3)
+                else
+                    Color(0xFF3F51B5)
             ),
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.widthIn(max = 280.dp)
+            modifier = Modifier.widthIn(max = if (isLandscape) 400.dp else 280.dp)
         ) {
             Text(
                 text = message,
                 modifier = Modifier.padding(12.dp),
-                color = if (isUser) Color.White else Color.Black,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                color = Color.White
             )
         }
     }
@@ -472,10 +491,9 @@ suspend fun fetchArtObjects(): List<ArtObject> = withContext(Dispatchers.IO) {
         val objectIDs = searchJson.getJSONArray("objectIDs")
 
         val artList = mutableListOf<ArtObject>()
-        val targetCount = 80 // Target jumlah artwork yang ingin ditampilkan
+        val targetCount = 80
         var index = 0
 
-        // Loop sampai dapat 80 artwork ATAU kehabisan data
         while (artList.size < targetCount && index < objectIDs.length()) {
             try {
                 val objectID = objectIDs.getInt(index)
@@ -511,6 +529,11 @@ suspend fun fetchArtObjects(): List<ArtObject> = withContext(Dispatchers.IO) {
         e.printStackTrace()
         emptyList()
     }
+}
+@Composable
+fun isLandscape(): Boolean {
+    val configuration = LocalConfiguration.current
+    return configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
 suspend fun sendMessageToGroq(message: String, artObjects: List<ArtObject>): String = withContext(Dispatchers.IO) {
@@ -561,6 +584,7 @@ suspend fun sendMessageToGroq(message: String, artObjects: List<ArtObject>): Str
         "Error: ${e.message ?: "Unable to connect to AI service"}"
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewDashboard() {
