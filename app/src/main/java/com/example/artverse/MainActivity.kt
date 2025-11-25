@@ -1,7 +1,6 @@
 package com.example.artverse
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -27,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
 import com.example.artverse.ui.theme.ArtverseTheme
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +40,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +65,7 @@ fun ArtverseTheme(content: @Composable () -> Unit){
             primary = Color(0xFF6200EE),
             secondary = Color(0xFF03DAC6),
             background = Color(0xFFF5F5F5)
-    ),
+        ),
         content = content
     )
 }
@@ -88,12 +89,13 @@ fun Dashboard(){
     var isLoading by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedArt by remember { mutableStateOf<ArtObject?>(null) }
+    val context = LocalContext.current
 
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         isLoading = true
-        artObjects = fetchArtObjects()
+        artObjects = fetchArtObjects(context)
         isLoading = false
     }
 
@@ -103,7 +105,7 @@ fun Dashboard(){
                 TopAppBar(
                     title = {
                         Text(
-                            "Artverse",
+                            stringResource(R.string.app_name),
                             fontWeight = FontWeight.Bold
                         )
                     },
@@ -120,19 +122,19 @@ fun Dashboard(){
                 tonalElevation = 8.dp
             ) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, "Dashboard") },
-                    label = { Text("Dashboard") },
+                    icon = { Icon(Icons.Default.Home, stringResource(R.string.dashboard)) },
+                    label = { Text(stringResource(R.string.dashboard)) },
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Search, "Search") },
-                    label = { Text("Search") },
+                    icon = { Icon(Icons.Default.Search, stringResource(R.string.search)) },
+                    label = { Text(stringResource(R.string.search)) },
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Star, "AI Assistant") },
+                    icon = { Icon(Icons.Default.Star, stringResource(R.string.ai_assistant)) },
                     label = { Text("AI") },
                     selected = selectedTab == 2,
                     onClick = { selectedTab = 2 }
@@ -187,7 +189,7 @@ fun DashboardScreen(
         }
     } else {
         LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(if (isLandscape) 3 else 2), // 3 kolom untuk landscape
+            columns = StaggeredGridCells.Fixed(if (isLandscape) 3 else 2),
             contentPadding = PaddingValues(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalItemSpacing = 8.dp
@@ -227,7 +229,7 @@ fun ArtCard(art: ArtObject, onClick: () -> Unit) {
                         .background(Color.LightGray),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No Image", color = Color.Gray)
+                    Text(stringResource(R.string.no_image), color = Color.Gray)
                 }
             }
 
@@ -271,7 +273,7 @@ fun SearchScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            placeholder = { Text("Search artworks...") },
+            placeholder = { Text(stringResource(R.string.search_placeholder)) },
             singleLine = true,
             shape = RoundedCornerShape(24.dp)
         )
@@ -302,7 +304,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
     var chatMessages by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val isLandscape = isLandscape()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -310,7 +312,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
             .background(Color(0xFFF5F5F5))
     ) {
         TopAppBar(
-            title = { Text("AI Art Assistant", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.ai_assistant), fontWeight = FontWeight.Bold) },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 titleContentColor = Color.White
@@ -331,7 +333,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Hello! I'm your AI art assistant. Ask me anything about the artworks in the gallery!",
+                        text = stringResource(R.string.ai_greeting),
                         modifier = Modifier.padding(16.dp),
                         fontSize = 14.sp,
                         color = Color.White
@@ -366,7 +368,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
                 value = userMessage,
                 onValueChange = { userMessage = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Ask about artworks...") },
+                placeholder = { Text(stringResource(R.string.ai_prompt_placeholder)) },
                 shape = RoundedCornerShape(24.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.Black,
@@ -387,7 +389,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
                         isLoading = true
 
                         scope.launch {
-                            val response = sendMessageToGroq(message, artObjects)
+                            val response = sendMessageToGroq(message, artObjects, context)
                             chatMessages = chatMessages + ("ai" to response)
                             isLoading = false
                         }
@@ -396,19 +398,20 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
                 enabled = !isLoading,
                 shape = RoundedCornerShape(24.dp)
             ) {
-                Text("Send")
+                Text(stringResource(R.string.send))
             }
         }
     }
 }
 
 @Composable
-fun ChatBubble(sender: String, message: String, isLandscape: Boolean = false) {
+fun ChatBubble(sender: String, message: String) {
     val isUser = sender == "user"
+    val isLandscape = isLandscape()
 
     Box(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = if ((isUser)) Alignment.CenterEnd else Alignment.CenterStart
+        contentAlignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
     ) {
         Card(
             colors = CardDefaults.cardColors(
@@ -450,16 +453,16 @@ fun ArtDetailDialog(art: ArtObject, onDismiss: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                DetailRow("Artist", art.artistDisplayName)
-                DetailRow("Date", art.objectDate)
-                DetailRow("Medium", art.medium)
-                DetailRow("Department", art.department)
-                DetailRow("Culture", art.culture)
+                DetailRow(stringResource(R.string.artist), art.artistDisplayName)
+                DetailRow(stringResource(R.string.date), art.objectDate)
+                DetailRow(stringResource(R.string.medium), art.medium)
+                DetailRow(stringResource(R.string.department), art.department)
+                DetailRow(stringResource(R.string.culture), art.culture)
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.close))
             }
         }
     )
@@ -480,7 +483,7 @@ fun DetailRow(label: String, value: String) {
     }
 }
 
-suspend fun fetchArtObjects(): List<ArtObject> = withContext(Dispatchers.IO) {
+suspend fun fetchArtObjects(context: android.content.Context): List<ArtObject> = withContext(Dispatchers.IO) {
     try {
         val searchUrl = "https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=painting"
         val searchConn = URL(searchUrl).openConnection() as HttpURLConnection
@@ -508,13 +511,13 @@ suspend fun fetchArtObjects(): List<ArtObject> = withContext(Dispatchers.IO) {
                     artList.add(
                         ArtObject(
                             objectID = objectJson.getInt("objectID"),
-                            title = objectJson.optString("title", "Untitled"),
-                            artistDisplayName = objectJson.optString("artistDisplayName", "Unknown Artist"),
+                            title = objectJson.optString("title", context.getString(R.string.untitled)),
+                            artistDisplayName = objectJson.optString("artistDisplayName", context.getString(R.string.unknown_artist)),
                             primaryImage = objectJson.optString("primaryImage", ""),
-                            objectDate = objectJson.optString("objectDate", "Unknown"),
-                            medium = objectJson.optString("medium", "Unknown"),
-                            department = objectJson.optString("department", "Unknown"),
-                            culture = objectJson.optString("culture", "Unknown")
+                            objectDate = objectJson.optString("objectDate", context.getString(R.string.unknown)),
+                            medium = objectJson.optString("medium", context.getString(R.string.unknown)),
+                            department = objectJson.optString("department", context.getString(R.string.unknown)),
+                            culture = objectJson.optString("culture", context.getString(R.string.unknown))
                         )
                     )
                 }
@@ -530,13 +533,18 @@ suspend fun fetchArtObjects(): List<ArtObject> = withContext(Dispatchers.IO) {
         emptyList()
     }
 }
+
 @Composable
 fun isLandscape(): Boolean {
     val configuration = LocalConfiguration.current
     return configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 }
 
-suspend fun sendMessageToGroq(message: String, artObjects: List<ArtObject>): String = withContext(Dispatchers.IO) {
+suspend fun sendMessageToGroq(
+    message: String,
+    artObjects: List<ArtObject>,
+    context: android.content.Context
+): String = withContext(Dispatchers.IO) {
     try {
         val artContext = artObjects.take(5).joinToString("\n") {
             "- ${it.title} by ${it.artistDisplayName} (${it.objectDate})"
@@ -577,11 +585,11 @@ suspend fun sendMessageToGroq(message: String, artObjects: List<ArtObject>): Str
             val message = choices.getJSONObject(0).getJSONObject("message")
             message.getString("content")
         } else {
-            "Sorry, I couldn't process your request. Please make sure you've added your Groq API key."
+            context.getString(R.string.ai_error)
         }
     } catch (e: Exception) {
         e.printStackTrace()
-        "Error: ${e.message ?: "Unable to connect to AI service"}"
+        "${context.getString(R.string.connection_error)}: ${e.message}"
     }
 }
 
