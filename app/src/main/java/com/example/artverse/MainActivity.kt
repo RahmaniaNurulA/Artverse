@@ -41,12 +41,17 @@ import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import androidx.compose.foundation.isSystemInDarkTheme
+import org.json.JSONArray
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ArtverseTheme() {
+            ArtverseTheme(dynamicColor = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -59,13 +64,23 @@ class MainActivity : ComponentActivity(){
 }
 
 @Composable
-fun ArtverseTheme(content: @Composable () -> Unit){
+fun ArtverseTheme(dynamicColor: Boolean = false, content: @Composable () -> Unit){
+    val isDarkMode = isSystemInDarkTheme()
+
     MaterialTheme(
-        colorScheme = lightColorScheme(
-            primary = Color(0xFF6200EE),
-            secondary = Color(0xFF03DAC6),
-            background = Color(0xFFF5F5F5)
-        ),
+        colorScheme = if (isDarkMode) {
+            darkColorScheme(
+                primary = Color(0xFF2C1B47),
+                secondary = Color(0xFF03DAC6),
+                background = Color(0xFF121212)
+            )
+        } else {
+            lightColorScheme(
+                primary = Color(0xFF2C1B47),
+                secondary = Color(0xFF03DAC6),
+                background = Color(0xFFF5F5F5)
+            )
+        },
         content = content
     )
 }
@@ -83,20 +98,15 @@ data class ArtObject(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Dashboard(){
+fun Dashboard(viewModel: ArtViewModel = androidx.lifecycle.viewmodel.compose.viewModel()){
     var selectedTab by remember { mutableStateOf(0) }
-    var artObjects by remember { mutableStateOf<List<ArtObject>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedArt by remember { mutableStateOf<ArtObject?>(null) }
     val context = LocalContext.current
 
-    val scope = rememberCoroutineScope()
-
+    // Load data menggunakan ViewModel
     LaunchedEffect(Unit) {
-        isLoading = true
-        artObjects = fetchArtObjects(context)
-        isLoading = false
+        viewModel.loadArtObjects(context)
     }
 
     Scaffold(
@@ -110,7 +120,7 @@ fun Dashboard(){
                         )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
+                        containerColor = Color(0xFF764ba2),
                         titleContentColor = Color.White
                     )
                 )
@@ -149,17 +159,17 @@ fun Dashboard(){
         ) {
             when (selectedTab) {
                 0 -> DashboardScreen(
-                    artObjects = artObjects,
-                    isLoading = isLoading,
+                    artObjects = viewModel.artObjects,
+                    isLoading = viewModel.isLoading,
                     onArtClick = { selectedArt = it }
                 )
                 1 -> SearchScreen(
                     searchQuery = searchQuery,
                     onSearchQueryChange = { searchQuery = it },
-                    artObjects = artObjects,
+                    artObjects = viewModel.artObjects,
                     onArtClick = { selectedArt = it }
                 )
-                2 -> AIAssistantScreen(artObjects = artObjects)
+                2 -> AIAssistantScreen(artObjects = viewModel.artObjects)
             }
 
             selectedArt?.let { art ->
@@ -306,15 +316,21 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    // Deteksi dark mode
+    val isDarkMode = isSystemInDarkTheme()
+    val backgroundColor = if (isDarkMode) Color(0xFF121212) else Color(0xFFF5F5F5)
+    val inputBackgroundColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+    val inputTextColor = if (isDarkMode) Color.White else Color.Black
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(backgroundColor)
     ) {
         TopAppBar(
             title = { Text(stringResource(R.string.ai_assistant), fontWeight = FontWeight.Bold) },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
+                containerColor = Color(0xFF764ba2),
                 titleContentColor = Color.White
             )
         )
@@ -328,7 +344,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
             item {
                 Card(
                     colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF4CAF50)
+                        containerColor = Color(0xFF2C1B47)
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -343,7 +359,7 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
 
             items(chatMessages.size) { index ->
                 val (sender, message) = chatMessages[index]
-                ChatBubble(sender = sender, message = message)
+                ChatBubble(sender = sender, message = message, isDarkMode = isDarkMode)
             }
 
             if (isLoading) {
@@ -371,10 +387,12 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
                 placeholder = { Text(stringResource(R.string.ai_prompt_placeholder)) },
                 shape = RoundedCornerShape(24.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White
+                    focusedTextColor = inputTextColor,
+                    unfocusedTextColor = inputTextColor,
+                    focusedContainerColor = inputBackgroundColor,
+                    unfocusedContainerColor = inputBackgroundColor,
+                    focusedBorderColor = Color(0xFF3F2B6B),
+                    unfocusedBorderColor = if (isDarkMode) Color(0xFF555555) else Color(0xFFCCCCCC)
                 )
             )
 
@@ -396,16 +414,23 @@ fun AIAssistantScreen(artObjects: List<ArtObject>) {
                     }
                 },
                 enabled = !isLoading,
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3F2B6B),
+                    contentColor = Color.White
+                )
             ) {
-                Text(stringResource(R.string.send))
+                Text(
+                    text = stringResource(R.string.send),
+                    color = Color.White
+                )
             }
         }
     }
 }
 
 @Composable
-fun ChatBubble(sender: String, message: String) {
+fun ChatBubble(sender: String, message: String, isDarkMode: Boolean = false) {
     val isUser = sender == "user"
     val isLandscape = isLandscape()
 
@@ -415,10 +440,11 @@ fun ChatBubble(sender: String, message: String) {
     ) {
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = if (sender == "user")
-                    Color(0xFF2196F3)
-                else
-                    Color(0xFF3F51B5)
+                containerColor = if (isUser) {
+                    if (isDarkMode) Color(0xFF1565C0) else Color(0xFF2196F3)
+                } else {
+                    if (isDarkMode) Color(0xFF2C1B47) else Color(0xFF3F51B5)
+                }
             ),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.widthIn(max = if (isLandscape) 400.dp else 280.dp)
@@ -488,48 +514,63 @@ suspend fun fetchArtObjects(context: android.content.Context): List<ArtObject> =
         val searchUrl = "https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&q=painting"
         val searchConn = URL(searchUrl).openConnection() as HttpURLConnection
         searchConn.requestMethod = "GET"
+        searchConn.connectTimeout = 8000
+        searchConn.readTimeout = 8000
 
         val searchResponse = searchConn.inputStream.bufferedReader().readText()
         val searchJson = JSONObject(searchResponse)
         val objectIDs = searchJson.getJSONArray("objectIDs")
 
-        val artList = mutableListOf<ArtObject>()
-        val targetCount = 80
-        var index = 0
+        val targetCount = 20
 
-        while (artList.size < targetCount && index < objectIDs.length()) {
-            try {
-                val objectID = objectIDs.getInt(index)
-                val objectUrl = "https://collectionapi.metmuseum.org/public/collection/v1/objects/$objectID"
-                val objectConn = URL(objectUrl).openConnection() as HttpURLConnection
-                objectConn.requestMethod = "GET"
+        val idsToFetch = (0 until minOf(targetCount * 4, objectIDs.length()))
+            .map { objectIDs.getInt(it) }
 
-                val objectResponse = objectConn.inputStream.bufferedReader().readText()
-                val objectJson = JSONObject(objectResponse)
+        val artList = idsToFetch.chunked(5).flatMap { chunk ->
+            chunk.mapNotNull { objectID ->
+                async {
+                    try {
+                        // Kurangi delay dari 100ms menjadi 50ms
+                        kotlinx.coroutines.delay(50)
 
-                if (objectJson.optString("primaryImage").isNotEmpty()) {
-                    artList.add(
-                        ArtObject(
-                            objectID = objectJson.getInt("objectID"),
-                            title = objectJson.optString("title", context.getString(R.string.untitled)),
-                            artistDisplayName = objectJson.optString("artistDisplayName", context.getString(R.string.unknown_artist)),
-                            primaryImage = objectJson.optString("primaryImage", ""),
-                            objectDate = objectJson.optString("objectDate", context.getString(R.string.unknown)),
-                            medium = objectJson.optString("medium", context.getString(R.string.unknown)),
-                            department = objectJson.optString("department", context.getString(R.string.unknown)),
-                            culture = objectJson.optString("culture", context.getString(R.string.unknown))
-                        )
-                    )
+                        val objectUrl = "https://collectionapi.metmuseum.org/public/collection/v1/objects/$objectID"
+                        val objectConn = URL(objectUrl).openConnection() as HttpURLConnection
+                        objectConn.requestMethod = "GET"
+                        objectConn.connectTimeout = 8000
+                        objectConn.readTimeout = 8000
+
+                        val objectResponse = objectConn.inputStream.bufferedReader().readText()
+                        val objectJson = JSONObject(objectResponse)
+
+                        val imageUrl = objectJson.optString("primaryImage", "")
+
+                        if (imageUrl.isNotEmpty() && (imageUrl.startsWith("http://") || imageUrl.startsWith("https://"))) {
+                            ArtObject(
+                                objectID = objectJson.getInt("objectID"),
+                                title = objectJson.optString("title", context.getString(R.string.untitled)),
+                                artistDisplayName = objectJson.optString("artistDisplayName", context.getString(R.string.unknown_artist)),
+                                primaryImage = imageUrl,
+                                objectDate = objectJson.optString("objectDate", context.getString(R.string.unknown)),
+                                medium = objectJson.optString("medium", context.getString(R.string.unknown)),
+                                department = objectJson.optString("department", context.getString(R.string.unknown)),
+                                culture = objectJson.optString("culture", context.getString(R.string.unknown))
+                            )
+                        } else {
+                            null
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        null
+                    }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            index++
-        }
+            }.awaitAll().filterNotNull()
+        }.take(targetCount)
 
+        println("Total art objects fetched: ${artList.size}")
         artList
     } catch (e: Exception) {
         e.printStackTrace()
+        println("Error in fetchArtObjects: ${e.message}")
         emptyList()
     }
 }
@@ -546,50 +587,65 @@ suspend fun sendMessageToGroq(
     context: android.content.Context
 ): String = withContext(Dispatchers.IO) {
     try {
+        // Buat context dari artworks
         val artContext = artObjects.take(5).joinToString("\n") {
-            "- ${it.title} by ${it.artistDisplayName} (${it.objectDate})"
+            "- ${it.title} oleh ${it.artistDisplayName} (${it.objectDate})"
         }
 
-        val requestBody = """
-        {
-            "model": "llama3-8b-8192",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "You are an art expert assistant. Help users understand artworks from the Met Museum collection. Here are some artworks in the gallery:\n$artContext"
-                },
-                {
-                    "role": "user",
-                    "content": "$message"
-                }
-            ],
-            "temperature": 0.7,
-            "max_tokens": 500
+        // Gunakan JSONObject untuk menghindari masalah escape character
+        val requestJson = JSONObject().apply {
+            put("model", "llama-3.1-8b-instant")
+            put("temperature", 0.7)
+            put("max_tokens", 500)
+
+            // Buat array messages
+            val messagesArray = JSONArray()
+
+            // System message dalam Bahasa Indonesia
+            val systemMessage = JSONObject().apply {
+                put("role", "system")
+                put("content", "Kamu adalah asisten ahli seni yang membantu pengguna memahami karya seni dari koleksi Museum Met. Selalu gunakan Bahasa Indonesia dalam setiap responsmu. Berikut adalah beberapa karya seni di galeri:\n$artContext")
+            }
+            messagesArray.put(systemMessage)
+
+            // User message
+            val userMessage = JSONObject().apply {
+                put("role", "user")
+                put("content", message)
+            }
+            messagesArray.put(userMessage)
+
+            put("messages", messagesArray)
         }
-        """.trimIndent()
 
         val url = URL("https://api.groq.com/openai/v1/chat/completions")
         val conn = url.openConnection() as HttpURLConnection
         conn.requestMethod = "POST"
         conn.setRequestProperty("Content-Type", "application/json")
         conn.setRequestProperty("Authorization", "Bearer ${constant.GROQ_API_KEY}")
+        conn.connectTimeout = 15000
+        conn.readTimeout = 15000
         conn.doOutput = true
 
-        conn.outputStream.write(requestBody.toByteArray())
+        // Kirim request body
+        conn.outputStream.use {
+            it.write(requestJson.toString().toByteArray(Charsets.UTF_8))
+        }
 
         val responseCode = conn.responseCode
         if (responseCode == 200) {
-            val response = conn.inputStream.bufferedReader().readText()
+            val response = conn.inputStream.bufferedReader().use { it.readText() }
             val jsonResponse = JSONObject(response)
             val choices = jsonResponse.getJSONArray("choices")
-            val message = choices.getJSONObject(0).getJSONObject("message")
-            message.getString("content")
+            val messageObj = choices.getJSONObject(0).getJSONObject("message")
+            messageObj.getString("content")
         } else {
-            context.getString(R.string.ai_error)
+            val errorBody = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "Unknown error"
+            "Error ${responseCode}: $errorBody"
         }
     } catch (e: Exception) {
         e.printStackTrace()
-        "${context.getString(R.string.connection_error)}: ${e.message}"
+        "Koneksi error: ${e.localizedMessage}"
     }
 }
 
