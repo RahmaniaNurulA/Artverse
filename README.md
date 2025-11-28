@@ -27,18 +27,22 @@ Halaman detail untuk menampilkan informasi lengkap karya seni.
 <table> <tr> <td><img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/CardLight.jpg" width="150" height="300"></td> <td><img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/cardDark.jpg" width="150" height="300"></td> </tr> </table>
 
 <h3>Teknologi yang Digunakan</h3>
-1. Kotlin
-2. Jetpack Compose
-3. Material 3 (Compose Material)
-4. Retrofit — untuk request API
-5. Coroutine + Flow
-6. Groq API — untuk fitur AI
-7. MetMuseum API — sumber data karya seni
-8. Coil — untuk loading gambar
-9. MVVM Architecture
+<ol>
+  <li>Kotlin</li>
+  <li>Jetpack Compose</li>
+  <li>Material 3 (Compose Material)</li>
+  <li>Retrofit — untuk request API</li>
+  <li>Coroutine + Flow</li>
+  <li>Groq API — untuk fitur AI</li>
+  <li>MetMuseum API — sumber data karya seni</li>
+  <li>Coil — untuk loading gambar</li>
+  <li>MVVM Architecture</li>
+</ol>
 
-<h3>Cara Mendapatkan API Key Groq: </h3>
-1. Kunjungi [Groq Console](https://console.groq.com)
-2. Daftar atau login ke akun Anda
-3. Buat API Key baru
-4. Salin dan simpan di file constant
+<h3>Cara Mendapatkan API Key Groq:</h3>
+<ol>
+  <li>Kunjungi <a href="https://console.groq.com">Groq Console</a></li>
+  <li>Daftar atau login ke akun Anda</li>
+  <li>Buat API Key baru</li>
+  <li>Salin dan simpan di file <code>constant</code></li>
+</ol>
