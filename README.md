@@ -1,3 +1,6 @@
+<h1>Artverse</h1>
+<h2>Aplikasi Galeri Seni Berbasis AI</h2>
+
 <h3>Dashboard</h3>
 <table>
   <tr>
