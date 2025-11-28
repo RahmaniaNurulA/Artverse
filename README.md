@@ -1,21 +1,17 @@
 <h3>Dashboard</h3>
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/dashboard.jpg" alt="Dashboard" width="150" height="300"> 
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/DashboardDark.jpg" alt="DashboardD" width="150" height="300"> 
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/DashboardLandscape.jpg" alt="DashboardL" width="300">
+<img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/dashboard.jpg" alt="Dashboard" width="150" height="300"> <img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/DashboardDark.jpg" alt="DashboardD" width="150" height="300">
+<img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/DashboardLandscape.jpg" alt="DashboardL" width="300">
 
 <h3>Search</h3>
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/Search.jpg" alt="Search" width="150" height="300"> 
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/SearchDark.jpg" alt="SearchD" width="150" height="300"> 
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/SearchLandscape.jpg" alt="SearchL" width="300">
+<img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/Search.jpg" alt="Search" width="150" height="300"> <img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/SearchDark.jpg" alt="SearchD" width="150" height="300">
+<img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/SearchLandscape.jpg" alt="SearchL" width="300">
 
 <h3>AI</h3>
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/AI.jpg" alt="AI" width="150" height="300"> 
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/AIDark.jpg" alt="AID" width="150" height="300"> 
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/AILandscape.jpg" alt="AIL" width="300">
+<img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/AI.jpg" alt="Search" width="150" height="300"> <img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/AIDark.jpg" alt="AID" width="150" height="300">
+<img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/AILandscape.jpg" alt="AIL" width="300">
 
 <h3>Card</h3>
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/CardLight.jpg" alt="Card" width="150" height="300"> 
-<img src="https://github.com/RahmaniaNurulA/Artverse/blob/master/cardDark.jpg" alt="CardD" width="150" height="300">
+<img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/CardLight.jpg" alt="Card" width="150" height="300"> <img src = "https://github.com/RahmaniaNurulA/Artverse/blob/master/cardDark.jpg" alt="CardD" width="150" height="300">
 
 ## Konfigurasi API Key
 
